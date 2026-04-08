@@ -2,6 +2,7 @@ package com.sb.quiz_service.service;
 
 
 import com.sb.quiz_service.dao.QuizDao;
+import com.sb.quiz_service.feign.QuizInterface;
 import com.sb.quiz_service.model.QuestionWrapper;
 import com.sb.quiz_service.model.Quiz;
 import com.sb.quiz_service.model.Response;
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+
 
 @Service
 public class QuizService {
@@ -20,17 +21,19 @@ public class QuizService {
     @Autowired
     QuizDao quizDao;
 
+    @Autowired
+    QuizInterface quizInterface;
 
 
 
     public ResponseEntity<String> createQuiz(String category, int numQ, String title){
 
         try {
-            List<Integer> questionIds = questionDao.findRandomQuestionsByCategory(category, numQ);
+            List<Integer> questionIds = quizInterface.getQuestionsForQuiz(category, numQ).getBody();
 
             Quiz quiz = new Quiz();
             quiz.setTitle(title);
-            quiz.setQuestions(questions);
+            quiz.setQuestionIds(questionIds);
             quizDao.save(quiz);
             return new ResponseEntity<>("Quiz created successfully", HttpStatus.CREATED);
         }
@@ -43,10 +46,10 @@ public class QuizService {
 
     public ResponseEntity<List<QuestionWrapper>> getQuizQuestions(int quizId){
         try {
-
-
-
-            return new ResponseEntity<>(new ArrayList<>(), HttpStatus.OK);
+            Quiz quiz = quizDao.findById(quizId).get();
+            List<Integer> quizQuestionIds = quiz.getQuestionIds();
+          ResponseEntity<List<QuestionWrapper>> questionsForUser = quizInterface.getQuestionsFromIds(quizQuestionIds);
+            return questionsForUser;
         }
         catch(Exception e){
             e.printStackTrace();
@@ -58,7 +61,8 @@ public class QuizService {
     public ResponseEntity<Integer> calculateResult(Integer quizId, List<Response> responses) {
 
         try {
-
+            ResponseEntity<Integer> score = quizInterface.getScore(responses);
+            return score;
         }
         catch(Exception e){
             e.printStackTrace();
