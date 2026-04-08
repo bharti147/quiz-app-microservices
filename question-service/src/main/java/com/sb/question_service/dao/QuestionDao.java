@@ -1,6 +1,6 @@
 package com.sb.question_service.dao;
 
-import com.sb.quizapp.model.Question;
+import com.sb.question_service.model.Question;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,8 +16,8 @@ public interface QuestionDao extends JpaRepository<Question, Integer> {
     List<Question> findByCategory(@Param("category") String category);
 
     //Native query (works on database tables)
-    @Query(value="SELECT * FROM Question q WHERE category = :category ORDER BY RANDOM() LIMIT :numQ ", nativeQuery = true)
-    List<Question> findRandomQuestionsByCategory(String category, int numQ);
+    @Query(value="SELECT q.id FROM Question q WHERE LOWER(category) = LOWER(:category) ORDER BY RANDOM() LIMIT :numQ ", nativeQuery = true)
+    List<Integer> findRandomQuestionsByCategory(String category, int numQ);
 
 
 }
